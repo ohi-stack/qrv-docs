@@ -1,51 +1,126 @@
-# qrv-docs
+# QR-V™ Documentation
 
-Documentation and developer guidance for QR-V™, including API reference, protocol architecture, verification workflows, integration guides, and external adoption resources.
+Authoritative protocol, standards, architecture, verification, registry, issuer, API, security, and implementation documentation for the QR-V™ Global Verification Network.
 
-## Production Status
+## Documentation Role
 
-Canonical public documentation now lives at:
+This repository is a standards and implementation source, not a marketing blog.
 
-```txt
+Documentation must distinguish:
+
+1. **Protocol** — QRVP-1 defines identifiers, resolution, verification, registry interaction, cryptographic validation, privacy modes, revocation, and responses.
+2. **Standard** — QVS-1.0 defines operational rules and deterministic verification behavior.
+3. **Implementation** — production APIs, database schemas, user interfaces, deployment, and operations.
+4. **Commercial Product** — issuer portal, certificate verification, memberships, product authentication, and enterprise integrations.
+
+## Canonical Public Access
+
+Current consolidated public documentation entry:
+
+```text
 https://qrv.network/docs
 ```
 
-This repository remains the source planning area for deeper documentation, protocol notes, integration drafts, developer examples, and future docs-site expansion.
+Reserved dedicated documentation service:
 
-## Public Documentation Paths
-
-```txt
-https://qrv.network/docs
-https://qrv.network/docs/overview
-https://qrv.network/docs/protocol
-https://qrv.network/docs/verification
-https://qrv.network/docs/registry
-https://qrv.network/docs/issuers
-https://qrv.network/docs/developers
-https://qrv.network/docs/api-reference
-https://qrv.network/docs/consolidation
+```text
+https://docs.qrv.network
 ```
 
-## Service Boundary
+Operational services remain separate:
 
-- Public documentation: `qrv.network/docs`
-- Public verification: `verify.qrv.network/{QRVID}`
-- JSON API: `api.qrv.network`
-- Registry authority: `registry.qrv.network`
-- Issuer portal: `issuer.qrv.network`
-- Internal admin: `admin.qrv.network`
+- `https://verify.qrv.network`
+- `https://api.qrv.network`
+- `https://registry.qrv.network`
+- `https://issuer.qrv.network`
 
-## Immediate Docs Priorities
+## Authoritative Structure
 
-1. QRVP-1 protocol specification.
-2. QRVID format standard.
-3. Verification status contract.
-4. Issuer onboarding guide.
-5. API reference with request and response examples.
-6. WordPress / WooCommerce product-verification integration guide.
-7. OneGodian campaign verification guide.
-8. Security and responsible disclosure page.
+```text
+/overview
+/protocol
+/standards
+/architecture
+/verification
+/registry
+/issuers
+/developers
+/api-reference
+/use-cases
+/governance
+/security
+/resources
+/legal
+```
 
-## Production Rule
+## Minimum Production Documentation
 
-Do not publish legal, financial, governmental, title, or investment conclusions through QRV. QRV verifies record status and metadata. The issuer remains responsible for the underlying claim, authorization, and lawful use of the record.
+- What is QR-V™
+- Problem with standard QR codes
+- QRVP-1 introduction
+- QRVID identifier formats
+- Resolution and verification flow
+- QVS-1.0 verification standard
+- Deterministic status contract
+- Registry data model
+- Issuer onboarding and lifecycle
+- Create, verify, and revoke API reference
+- Privacy modes
+- Cryptographic validation
+- Threat model
+- Deployment and operations guide
+- Verification disclaimers
+
+## Canonical Flow
+
+```text
+QR code
+→ QR-V identifier
+→ resolver
+→ verification API
+→ registry lookup
+→ hash/signature validation
+→ deterministic result
+```
+
+## Deterministic Statuses
+
+```text
+VERIFIED
+REVOKED
+EXPIRED
+NOT_FOUND
+INVALID_FORMAT
+INVALID_SIGNATURE
+SUSPENDED_ISSUER
+UNAVAILABLE
+```
+
+See `VERIFICATION_STATUS_CONTRACT.md` for normative behavior.
+
+## API Assets
+
+- `openapi.yaml` — OpenAPI 3.1 contract for the production-facing core API.
+- `VERIFICATION_STATUS_CONTRACT.md` — deterministic response and HTTP-mapping rules.
+
+## Documentation Rules
+
+- Use stable permanent URLs without dates.
+- Use Gregorian/UTC timestamps as controlling operational timestamps.
+- OneGodian Time™ may appear only as supplemental reference metadata where configured.
+- Do not represent verification as legal adjudication, ownership adjudication, governmental approval, or independent validation of an issuer's underlying claim.
+- State precisely what was checked: registry presence, issuer status, record status, hash integrity, signature validity, expiration, and revocation.
+- Use current `qrv.network` service URLs; retain legacy domains only in clearly marked historical records.
+
+## Production Completion Standard
+
+A developer using this documentation must be able to:
+
+1. authenticate as an approved issuer;
+2. create a record;
+3. receive a QRVID;
+4. generate a verification QR;
+5. retrieve a deterministic public result;
+6. revoke the record;
+7. observe the public result change to `REVOKED`;
+8. interpret all errors and privacy modes without unpublished assumptions.
