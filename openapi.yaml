@@ -1,0 +1,392 @@
+openapi: 3.1.0
+info:
+  title: QR-V™ Core API
+  version: 1.0.0
+  description: |
+    Core production contract for QRVP-1 verification, record issuance, and revocation.
+    QR-V verifies canonical registry state and integrity; it does not independently adjudicate the underlying legal or factual claim made by an issuer.
+  contact:
+    name: QR-V Developer Support
+servers:
+  - url: https://api.qrv.network/api/v1
+    description: Production
+  - url: http://localhost:3000/api/v1
+    description: Local development
+tags:
+  - name: System
+  - name: Verification
+  - name: Issuance
+  - name: Revocation
+paths:
+  /health:
+    get:
+      tags: [System]
+      operationId: getHealth
+      summary: Process health check
+      responses:
+        '200':
+          description: Service process is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /readyz:
+    get:
+      tags: [System]
+      operationId: getReadiness
+      summary: Dependency readiness check
+      responses:
+        '200':
+          description: Required dependencies are ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: A required dependency is unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /verify/{qrvid}:
+    get:
+      tags: [Verification]
+      operationId: verifyRecord
+      summary: Verify a QR-V record
+      parameters:
+        - $ref: '#/components/parameters/QrvidPath'
+      responses:
+        '200':
+          description: Deterministic verification result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse'
+        '404':
+          description: The record was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse'
+        '410':
+          description: The record was revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse'
+        '422':
+          description: Invalid QRVID format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse'
+        '503':
+          description: Verification could not be completed reliably.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse'
+  /registry/create:
+    post:
+      tags: [Issuance]
+      operationId: createRecord
+      summary: Create a registry-backed QR-V record
+      security:
+        - bearerAuth: []
+        - issuerApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecordRequest'
+      responses:
+        '201':
+          description: Record created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRecordResponse'
+        '400':
+          description: Request validation failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Issuer is not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: A unique constraint or idempotency conflict occurred.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /revoke:
+    post:
+      tags: [Revocation]
+      operationId: revokeRecord
+      summary: Revoke an issuer-owned QR-V record
+      security:
+        - bearerAuth: []
+        - issuerApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeRecordRequest'
+      responses:
+        '200':
+          description: Record revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeRecordResponse'
+        '401':
+          description: Authentication failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: The actor cannot revoke this record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Record not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Record is already revoked or cannot transition.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    issuerApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+  parameters:
+    QrvidPath:
+      name: qrvid
+      in: path
+      required: true
+      description: Canonical QR-V identifier.
+      schema:
+        type: string
+        pattern: '^QRV-(PROD|TEST|DEV)-(CERT|ID|PROD|DOC|ASSET|PROP|EVENT|FIN)-[0-9]{6,}$'
+        example: QRV-PROD-CERT-000001
+  schemas:
+    VerificationStatus:
+      type: string
+      enum:
+        - VERIFIED
+        - REVOKED
+        - EXPIRED
+        - NOT_FOUND
+        - INVALID_FORMAT
+        - INVALID_SIGNATURE
+        - SUSPENDED_ISSUER
+        - UNAVAILABLE
+    PrivacyLevel:
+      type: string
+      enum: [public, restricted, private]
+    HealthResponse:
+      type: object
+      required: [status, service, version, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ok, ready]
+        service:
+          type: string
+        version:
+          type: string
+        protocol:
+          type: string
+          example: QRVP-1
+        timestamp:
+          type: string
+          format: date-time
+    IssuerSummary:
+      type: object
+      required: [code, name, status]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [active, pending, suspended, revoked]
+    IntegrityResult:
+      type: object
+      properties:
+        hashAlgorithm:
+          type: string
+          example: SHA-256
+        hashValid:
+          type: boolean
+        signatureAlgorithm:
+          type: string
+          example: Ed25519
+        signatureValid:
+          type: boolean
+    VerificationResponse:
+      type: object
+      required: [ok, status, qrvid, verifiedAt, protocolVersion, standardVersion]
+      properties:
+        ok:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/VerificationStatus'
+        qrvid:
+          type: string
+        recordType:
+          type: string
+        issuer:
+          $ref: '#/components/schemas/IssuerSummary'
+        subject:
+          type: object
+          additionalProperties: true
+        title:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: [string, 'null']
+          format: date-time
+        revokedAt:
+          type: [string, 'null']
+          format: date-time
+        privacyLevel:
+          $ref: '#/components/schemas/PrivacyLevel'
+        integrity:
+          $ref: '#/components/schemas/IntegrityResult'
+        registryReference:
+          type: string
+          format: uri
+        verifiedAt:
+          type: string
+          format: date-time
+        protocolVersion:
+          type: string
+          example: QRVP-1
+        standardVersion:
+          type: string
+          example: QVS-1.0
+        message:
+          type: string
+    CreateRecordRequest:
+      type: object
+      required: [recordType, subject, title, issuedAt, privacyLevel]
+      properties:
+        recordType:
+          type: string
+          enum: [certificate, identity, membership, product, document, asset, property, event, financial]
+        subject:
+          type: object
+          additionalProperties: true
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 5000
+        issuedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: [string, 'null']
+          format: date-time
+        privacyLevel:
+          $ref: '#/components/schemas/PrivacyLevel'
+        metadata:
+          type: object
+          additionalProperties: true
+        idempotencyKey:
+          type: string
+          maxLength: 128
+    CreateRecordResponse:
+      type: object
+      required: [qrvid, status, verificationUrl, createdAt]
+      properties:
+        qrvid:
+          type: string
+        status:
+          type: string
+          enum: [VERIFIED]
+        verificationUrl:
+          type: string
+          format: uri
+        registryReference:
+          type: string
+          format: uri
+        recordHash:
+          type: string
+        signatureAlgorithm:
+          type: string
+          example: Ed25519
+        createdAt:
+          type: string
+          format: date-time
+    RevokeRecordRequest:
+      type: object
+      required: [qrvid, reason]
+      properties:
+        qrvid:
+          type: string
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    RevokeRecordResponse:
+      type: object
+      required: [qrvid, status, revokedAt]
+      properties:
+        qrvid:
+          type: string
+        status:
+          type: string
+          enum: [REVOKED]
+        revokedAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required: [ok, error, message, requestId]
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: string
+        message:
+          type: string
+        requestId:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
