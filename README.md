@@ -1,126 +1,51 @@
-# QR-V™ Documentation
+# QR-V™ Documentation — Authoritative Content Source
 
-Authoritative protocol, standards, architecture, verification, registry, issuer, API, security, and implementation documentation for the QR-V™ Global Verification Network.
+This repository remains the authoritative source for QR-V protocol, standards, architecture, verification, registry, issuer, API, security, and implementation documentation.
 
-## Documentation Role
+It is **not** a required standalone production node after consolidation.
 
-This repository is a standards and implementation source, not a marketing blog.
-
-Documentation must distinguish:
-
-1. **Protocol** — QRVP-1 defines identifiers, resolution, verification, registry interaction, cryptographic validation, privacy modes, revocation, and responses.
-2. **Standard** — QVS-1.0 defines operational rules and deterministic verification behavior.
-3. **Implementation** — production APIs, database schemas, user interfaces, deployment, and operations.
-4. **Commercial Product** — issuer portal, certificate verification, memberships, product authentication, and enterprise integrations.
-
-## Canonical Public Access
-
-Current consolidated public documentation entry:
+## Canonical public documentation
 
 ```text
 https://qrv.network/docs
+https://qrv.network/docs/overview
+https://qrv.network/docs/protocol
+https://qrv.network/docs/verification
+https://qrv.network/docs/registry
+https://qrv.network/docs/issuers
+https://qrv.network/docs/developers
+https://qrv.network/api-reference
 ```
 
-Reserved dedicated documentation service:
+## Two-node architecture
 
 ```text
-https://docs.qrv.network
+qrv.network
+  human-facing documentation and application routes
+      ↓
+api.qrv.network
+  machine-facing API and registry authority
 ```
 
-Operational services remain separate:
+`docs.qrv.network` is now a legacy compatibility hostname, not a required independent application. If retained, point it to `qrv-node` so it redirects to `qrv.network/docs`.
 
-- `https://verify.qrv.network`
-- `https://api.qrv.network`
-- `https://registry.qrv.network`
-- `https://issuer.qrv.network`
+## Documentation role
 
-## Authoritative Structure
+Continue to maintain standards-quality source material here, including:
 
-```text
-/overview
-/protocol
-/standards
-/architecture
-/verification
-/registry
-/issuers
-/developers
-/api-reference
-/use-cases
-/governance
-/security
-/resources
-/legal
-```
+- QRVP-1;
+- QVS-1.0;
+- identifier and resolution rules;
+- verification status contract;
+- registry data model;
+- issuer lifecycle;
+- API reference;
+- security and threat model;
+- deployment and operations guidance;
+- changelog and versioning.
 
-## Minimum Production Documentation
+## Publishing rule
 
-- What is QR-V™
-- Problem with standard QR codes
-- QRVP-1 introduction
-- QRVID identifier formats
-- Resolution and verification flow
-- QVS-1.0 verification standard
-- Deterministic status contract
-- Registry data model
-- Issuer onboarding and lifecycle
-- Create, verify, and revoke API reference
-- Privacy modes
-- Cryptographic validation
-- Threat model
-- Deployment and operations guide
-- Verification disclaimers
+Production-facing human documentation is published through `ohi-stack/qrv-node`. Machine-facing API behavior is implemented by `ohi-stack/qrv-api`.
 
-## Canonical Flow
-
-```text
-QR code
-→ QR-V identifier
-→ resolver
-→ verification API
-→ registry lookup
-→ hash/signature validation
-→ deterministic result
-```
-
-## Deterministic Statuses
-
-```text
-VERIFIED
-REVOKED
-EXPIRED
-NOT_FOUND
-INVALID_FORMAT
-INVALID_SIGNATURE
-SUSPENDED_ISSUER
-UNAVAILABLE
-```
-
-See `VERIFICATION_STATUS_CONTRACT.md` for normative behavior.
-
-## API Assets
-
-- `openapi.yaml` — OpenAPI 3.1 contract for the production-facing core API.
-- `VERIFICATION_STATUS_CONTRACT.md` — deterministic response and HTTP-mapping rules.
-
-## Documentation Rules
-
-- Use stable permanent URLs without dates.
-- Use Gregorian/UTC timestamps as controlling operational timestamps.
-- OneGodian Time™ may appear only as supplemental reference metadata where configured.
-- Do not represent verification as legal adjudication, ownership adjudication, governmental approval, or independent validation of an issuer's underlying claim.
-- State precisely what was checked: registry presence, issuer status, record status, hash integrity, signature validity, expiration, and revocation.
-- Use current `qrv.network` service URLs; retain legacy domains only in clearly marked historical records.
-
-## Production Completion Standard
-
-A developer using this documentation must be able to:
-
-1. authenticate as an approved issuer;
-2. create a record;
-3. receive a QRVID;
-4. generate a verification QR;
-5. retrieve a deterministic public result;
-6. revoke the record;
-7. observe the public result change to `REVOKED`;
-8. interpret all errors and privacy modes without unpublished assumptions.
+Do not delete this repository; it is a source-of-truth documentation repository, not a runtime dependency.
